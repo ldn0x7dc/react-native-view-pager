@@ -95,10 +95,12 @@ export default class ViewPager extends Component {
     this.scrollByOffset(dx);
   }
 
-  onResponderRelease(evt, gestureState) {
+  onResponderRelease(evt, gestureState, disableSettle) {
     this.activeGesture = false;
     this.changePageScrollState('settling');
-    this.settlePage(gestureState.vx);
+    if(!disableSettle) {
+      this.settlePage(gestureState.vx);
+    }
   }
 
   render() {
@@ -250,5 +252,9 @@ export default class ViewPager extends Component {
    */
   setPage(page, immediate) {
     this.scrollToPage(page, immediate);
+  }
+
+  getScrollOffsetFromCurrentPage() {
+    return this.scroller.getCurrX() - this.getScrollOffsetOfPage(this.currentPage);
   }
 }
