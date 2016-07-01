@@ -44,7 +44,7 @@ export default class App extends Component {
         />
         <TouchableOpacity
           onPress={() => {
-            this.refs['viewPager'].setPage(1, true);
+            this.refs['viewPager'].setPage(1);
           }}
           style={{height: 50, alignItems: 'center', justifyContent: 'center'}}>
           <Text>setPage</Text>

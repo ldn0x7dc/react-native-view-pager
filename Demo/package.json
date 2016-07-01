@@ -8,6 +8,6 @@
   "dependencies": {
     "react": "^15.1.0",
     "react-native": "^0.28.0",
-    "@ldn0x7dc/react-native-view-pager": "0.0.1"
+    "@ldn0x7dc/react-native-view-pager": "0.0.3"
   }
 }
