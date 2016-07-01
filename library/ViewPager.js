@@ -28,14 +28,14 @@ export default class ViewPager extends Component {
     onPageSelected: PropTypes.func,
     onPageScrollStateChanged: PropTypes.func,
     onPageScroll: PropTypes.func,
-  }
+  };
 
   static defaultProps = {
     initialPage: 0,
     pageMargin: 0,
     scrollEnabled: true,
     pageDataArray: [],
-  }
+  };
 
   constructor(props) {
     super(props);
@@ -106,12 +106,15 @@ export default class ViewPager extends Component {
   render() {
     if(this.state.width && this.state.height) {
       let list = this.props.pageDataArray;
+      if(!list) {
+        list = [];
+      }
       this.dataSource = this.dataSource.cloneWithRows(list);
       this.pageCount = list.length;
     }
 
     let gestureResponder = this.gestureResponder;
-    if(!this.props.scrollEnabled) {
+    if(!this.props.scrollEnabled || this.pageCount <= 0) {
       gestureResponder = {};
     }
 
