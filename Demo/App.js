@@ -15,9 +15,9 @@ export default class App extends Component {
 
   constructor(props) {
     super(props);
-    this.pageDataList = [];
+    this.pageDataArray = [];
     for(let i = 0; i < 100; i++) {
-      this.pageDataList.push('page#' + i);
+      this.pageDataArray.push('page#' + i);
     }
   }
 
@@ -28,7 +28,7 @@ export default class App extends Component {
           ref='viewPager'
           style={{flex: 1, backgroundColor: 'white'}}
           renderPage={this.renderPage.bind(this)}
-          pageDataList={this.pageDataList}
+          pageDataArray={this.pageDataArray}
           initialPage={3}
           pageMargin={20}
           scrollEnabled={true}
