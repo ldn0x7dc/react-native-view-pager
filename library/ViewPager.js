@@ -23,12 +23,18 @@ export default class ViewPager extends Component {
     pageMargin: PropTypes.number,
     renderPage: PropTypes.func,
     pageDataList: PropTypes.array,
+    scrollEnabled: PropTypes.bool,
+
+    onPageSelected: PropTypes.func,
+    onPageScrollStateChanged: PropTypes.func,
+    onPageScroll: PropTypes.func,
   }
 
   static defaultProps = {
     initialPage: 0,
     pageDataList: [],
-    pageMargin: 0
+    pageMargin: 0,
+    scrollEnabled: true
   }
 
   constructor(props) {
@@ -44,12 +50,27 @@ export default class ViewPager extends Component {
     this.currentPage = 0;
     this.pageCount = 0;
     this.initialPageSettled = false;
+    this.activeGesture = false;
 
     this.scroller = new Scroller(true, (dx, dy, scroller) => {
       if (dx === 0 && dy === 0 && scroller.isFinished()) {
-
+        if(!this.activeGesture) {
+          this.changePageScrollState('idle');
+        }
       } else {
-        this.refs['innerListView'].scrollTo({x: this.scroller.getCurrX(), animated: false});
+        const curX = this.scroller.getCurrX();
+        this.refs['innerListView'].scrollTo({x: curX, animated: false});
+
+        let position = Math.floor(curX / (this.state.width + this.props.pageMargin));
+        position = this.validPage(position);
+        let offset = (curX - this.getScrollOffsetOfPage(position)) / (this.state.width + this.props.pageMargin);
+        let fraction = (curX - this.getScrollOffsetOfPage(position) - this.props.pageMargin) / this.state.width;
+        if(fraction < 0) {
+          fraction = 0;
+        }
+        this.props.onPageScroll && this.props.onPageScroll({
+          position, offset, fraction
+        });
       }
     });
   }
@@ -65,6 +86,8 @@ export default class ViewPager extends Component {
 
   onResponderGrant(evt, gestureState) {
     this.scroller.forceFinished(true);
+    this.activeGesture = true;
+    this.changePageScrollState('dragging');
   }
 
   onResponderMove(evt, gestureState) {
@@ -73,6 +96,8 @@ export default class ViewPager extends Component {
   }
 
   onResponderRelease(evt, gestureState) {
+    this.activeGesture = false;
+    this.changePageScrollState('settling');
     this.settlePage(gestureState.vx);
   }
 
@@ -83,11 +108,16 @@ export default class ViewPager extends Component {
       this.pageCount = list.length;
     }
 
+    let gestureResponder = this.gestureResponder;
+    if(!this.props.scrollEnabled) {
+      gestureResponder = {};
+    }
+
     return (
       <View
         {...this.props}
         style={[this.props.style, {flex: 1}]}
-        {...this.gestureResponder}>
+        {...gestureResponder}>
         <ListView
           style={{flex: 1}}
           ref='innerListView'
@@ -165,40 +195,59 @@ export default class ViewPager extends Component {
   }
 
   getScrollOffsetOfPage(page) {
-    if(page === 0) {
-      return 0;
-    }
-    return page * this.state.width + page * this.props.pageMargin;
+    return page * (this.state.width + this.props.pageMargin);
   }
 
   flingToPage(page, velocityX) {
     page = this.validPage(page);
+    this.changePage(page);
 
     velocityX *= -1000; //per sec
     const finalX = this.getScrollOffsetOfPage(page);
     this.scroller.fling(this.scroller.getCurrX(), 0, velocityX, 0, finalX, finalX, 0, 0);
-    this.setPage(page);
+
   }
 
-  scrollToPage(page) {
+  scrollToPage(page, immediate) {
     page = this.validPage(page);
+    this.changePage(page);
 
     const finalX = this.getScrollOffsetOfPage(page);
-    this.scroller.startScroll(this.scroller.getCurrX(), 0, finalX - this.scroller.getCurrX(), 0, 200);
-    this.setPage(page);
+    if(immediate) {
+      this.scroller.startScroll(this.scroller.getCurrX(), 0, finalX - this.scroller.getCurrX(), 0, 0);
+    } else {
+      this.scroller.startScroll(this.scroller.getCurrX(), 0, finalX - this.scroller.getCurrX(), 0, 200);
+    }
+
+  }
+
+  changePage(page) {
+    if(this.currentPage !== page) {
+      this.currentPage = page;
+      this.props.onPageSelected && this.props.onPageSelected(page);
+    }
+  }
+
+  changePageScrollState(state) {
+    this.props.onPageScrollStateChanged && this.props.onPageScrollStateChanged(state);
   }
 
   scrollByOffset(dx) {
     this.scroller.startScroll(this.scroller.getCurrX(), 0, -dx, 0, 0);
   }
 
-  setPage(page) {
-    this.currentPage = this.validPage(page);
-  }
-
   validPage(page) {
     page = Math.min(this.pageCount - 1, page);
     page = Math.max(0, page);
     return page;
+  }
+
+  /**
+   * A helper function to scroll to a specific page in the ViewPager.
+   * @param page
+   * @param immediate If true, the transition between pages will not be animated.
+   */
+  setPage(page, immediate) {
+    this.scrollToPage(page, immediate);
   }
 }

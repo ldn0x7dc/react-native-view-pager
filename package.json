@@ -10,6 +10,6 @@
   "license": "ISC",
   "dependencies": {
     "react-native-gesture-responder": "0.0.8",
-    "react-native-scroller": "0.0.5"
+    "react-native-scroller": "0.0.6"
   }
 }

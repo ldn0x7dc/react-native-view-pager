@@ -5,7 +5,8 @@ import {
   Text,
   View,
   Dimensions,
-  ScrollView
+  ScrollView,
+  TouchableOpacity
 } from 'react-native';
 
 import ViewPager from '@ldn0x7dc/react-native-view-pager';
@@ -22,18 +23,38 @@ export default class App extends Component {
 
   render() {
     return (
-      <ViewPager
-        style={{backgroundColor: 'white'}}
-        renderPage={this.renderPage.bind(this)}
-        pageDataList={this.pageDataList}
-        initialPage={3}
-        pageMargin={20}
-      />
+      <View style={{flex: 1}}>
+        <ViewPager
+          ref='viewPager'
+          style={{flex: 1, backgroundColor: 'white'}}
+          renderPage={this.renderPage.bind(this)}
+          pageDataList={this.pageDataList}
+          initialPage={3}
+          pageMargin={20}
+          scrollEnabled={true}
+          onPageScroll={(e) => {
+            console.log('onPageScroll...' + JSON.stringify(e))
+          }}
+          onPageScrollStateChanged={(state) => {
+             console.log('onPageScrollStateChanged...' + state);
+          }}
+          onPageSelected={(page) => {
+            console.log('onPageSelected...' + page);
+          }}
+        />
+        <TouchableOpacity
+          onPress={() => {
+            this.refs['viewPager'].setPage(1, true);
+          }}
+          style={{height: 50, alignItems: 'center', justifyContent: 'center'}}>
+          <Text>setPage</Text>
+        </TouchableOpacity>
+      </View>
+
     );
   }
 
   renderPage(pageData, pageId, layout) {
-    console.log('renderPage...layout=' + JSON.stringify(layout));
     return (
       <View style={{flex: 1}}>
         <View
