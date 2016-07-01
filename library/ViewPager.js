@@ -47,7 +47,7 @@ export default class ViewPager extends Component {
       height: 0
     }
 
-    this.currentPage = 0;
+    this.currentPage; //not initialized
     this.pageCount = 0;
     this.initialPageSettled = false;
     this.activeGesture = false;
@@ -138,6 +138,7 @@ export default class ViewPager extends Component {
 
     let newProps = {
       ...page.props,
+      ref: page.ref,
       style: [page.props.style, {
         width: this.state.width,
         height: this.state.height,
