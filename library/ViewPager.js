@@ -121,6 +121,7 @@ export default class ViewPager extends Component {
     return (
       <View
         {...this.props}
+        style={[this.props.style, {flex: 1}]}
         {...gestureResponder}>
         <ListView
           style={{flex: 1}}
@@ -144,15 +145,24 @@ export default class ViewPager extends Component {
       ...page.props,
       ref: page.ref,
       style: [page.props.style, {
-        width: this.state.width,
-        height: this.state.height,
+        width: width,
+        height: height,
         position: 'relative',
-        marginLeft: 0,
-        marginRight: rowID === this.pageCount - 1 ? 0 : this.props.pageMargin,
       }]
     };
+    const element = React.createElement(page.type, newProps);
 
-    return React.createElement(page.type, newProps);
+
+    if(this.props.pageMargin > 0 && rowID > 0) {
+      //Do not using margin style to implement pageMargin. The ListView seems calculate a wrong width for children views with margin.
+      return (
+        <View style={{width: width + this.props.pageMargin, height: height, alignItems: 'flex-end'}}>
+          {element}
+        </View>
+      );
+    } else {
+      return element;
+    }
   }
 
   onLayout(e) {
