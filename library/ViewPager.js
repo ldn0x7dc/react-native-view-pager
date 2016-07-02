@@ -1,12 +1,15 @@
 import React, { PropTypes, Component } from 'react';
 import {
   View,
-  ListView
+  ListView,
+  Platform
 } from 'react-native';
 
-import Image from 'react-native-transformable-image';
 import Scroller from 'react-native-scroller';
 import {createResponder} from 'react-native-gesture-responder';
+import TimerMixin from 'react-timer-mixin';
+import reactMixin from 'react-mixin';
+
 
 const MIN_FLING_VELOCITY = 0.5;
 let DEV = false;
@@ -178,7 +181,13 @@ export default class ViewPager extends Component {
   componentDidUpdate() {
     if (!this.initialPageSettled) {
       this.initialPageSettled = true;
-      this.scrollToPage(this.props.initialPage, true);
+
+      if(Platform.OS === 'ios') {
+        this.scrollToPage(this.props.initialPage, true);
+      } else {
+        //A trick to solve bugs on Android. Delay a little
+        setTimeout(this.scrollToPage.bind(this, this.props.initialPage, true), 0);
+      }
     }
   }
 
@@ -270,3 +279,9 @@ export default class ViewPager extends Component {
     return this.scroller.getCurrX() - this.getScrollOffsetOfPage(this.currentPage);
   }
 }
+
+/**
+ * Keep in mind that if you use ES6 classes for your React components there is no built-in API for mixins. To use TimerMixin with ES6 classes, we recommend react-mixin.
+ * Refer to 'https://facebook.github.io/react-native/docs/timers.html#content'
+ */
+reactMixin(ViewPager.prototype, TimerMixin);
