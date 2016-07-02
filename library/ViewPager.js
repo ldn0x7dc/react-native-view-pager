@@ -47,7 +47,7 @@ export default class ViewPager extends Component {
       height: 0
     }
 
-    this.currentPage; //not initialized
+    this.currentPage; //Do not initialize to make onPageSelected(0) be dispatched
     this.pageCount = 0;
     this.initialPageSettled = false;
     this.activeGesture = false;
@@ -178,7 +178,7 @@ export default class ViewPager extends Component {
   componentDidUpdate() {
     if (!this.initialPageSettled) {
       this.initialPageSettled = true;
-      this.scrollToPage(this.props.initialPage);
+      this.scrollToPage(this.props.initialPage, true);
     }
   }
 
