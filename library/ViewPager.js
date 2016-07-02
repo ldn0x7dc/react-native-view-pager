@@ -121,7 +121,6 @@ export default class ViewPager extends Component {
     return (
       <View
         {...this.props}
-        style={[this.props.style, {flex: 1}]}
         {...gestureResponder}>
         <ListView
           style={{flex: 1}}
