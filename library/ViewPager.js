@@ -40,24 +40,25 @@ export default class ViewPager extends Component {
     pageDataArray: [],
   };
 
+  currentPage = undefined; //Do not initialize to make onPageSelected(0) be dispatched
+  layoutChanged = false;
+  initialPageSettled = false;
+  layoutChanged = false;
+  activeGesture = false;
+
   constructor(props) {
     super(props);
 
     const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-    this.dataSource = ds.cloneWithRows([]);
     this.state = {
       width: 0,
-      height: 0
+      height: 0,
+      dataSource: ds.cloneWithRows([])
     }
-
-    this.currentPage; //Do not initialize to make onPageSelected(0) be dispatched
-    this.pageCount = 0;
-    this.initialPageSettled = false;
-    this.activeGesture = false;
 
     this.scroller = new Scroller(true, (dx, dy, scroller) => {
       if (dx === 0 && dy === 0 && scroller.isFinished()) {
-        if(!this.activeGesture) {
+        if (!this.activeGesture) {
           this.changePageScrollState('idle');
         }
       } else {
@@ -68,7 +69,7 @@ export default class ViewPager extends Component {
         position = this.validPage(position);
         let offset = (curX - this.getScrollOffsetOfPage(position)) / (this.state.width + this.props.pageMargin);
         let fraction = (curX - this.getScrollOffsetOfPage(position) - this.props.pageMargin) / this.state.width;
-        if(fraction < 0) {
+        if (fraction < 0) {
           fraction = 0;
         }
         this.props.onPageScroll && this.props.onPageScroll({
@@ -101,23 +102,24 @@ export default class ViewPager extends Component {
   onResponderRelease(evt, gestureState, disableSettle) {
     this.activeGesture = false;
     this.changePageScrollState('settling');
-    if(!disableSettle) {
+    if (!disableSettle) {
       this.settlePage(gestureState.vx);
     }
   }
 
   render() {
-    if(this.state.width && this.state.height) {
+    let dataSource = this.state.dataSource;
+    if (this.state.width && this.state.height) {
       let list = this.props.pageDataArray;
-      if(!list) {
+      if (!list) {
         list = [];
       }
-      this.dataSource = this.dataSource.cloneWithRows(list);
+      dataSource = dataSource.cloneWithRows(list);
       this.pageCount = list.length;
     }
 
     let gestureResponder = this.gestureResponder;
-    if(!this.props.scrollEnabled || this.pageCount <= 0) {
+    if (!this.props.scrollEnabled || this.pageCount <= 0) {
       gestureResponder = {};
     }
 
@@ -132,7 +134,7 @@ export default class ViewPager extends Component {
           scrollEnabled={false}
           horizontal={true}
           enableEmptySections={true}
-          dataSource={this.dataSource}
+          dataSource={dataSource}
           renderRow={this.renderRow.bind(this)}
           onLayout={this.onLayout.bind(this)}
         />
@@ -156,7 +158,7 @@ export default class ViewPager extends Component {
     const element = React.createElement(page.type, newProps);
 
 
-    if(this.props.pageMargin > 0 && rowID > 0) {
+    if (this.props.pageMargin > 0 && rowID > 0) {
       //Do not using margin style to implement pageMargin. The ListView seems calculate a wrong width for children views with margin.
       return (
         <View style={{width: width + this.props.pageMargin, height: height, alignItems: 'flex-end'}}>
@@ -172,8 +174,11 @@ export default class ViewPager extends Component {
     let {width, height} = e.nativeEvent.layout;
     let sizeChanged = this.state.width !== width || this.state.height !== height;
     if (width && height && sizeChanged) {
+      //if layout changed, create a new DataSource instance to trigger renderRow
+      this.layoutChanged = true;
       this.setState({
-        width, height
+        width, height,
+        dataSource: (new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2})).cloneWithRows([])
       });
     }
   }
@@ -182,11 +187,22 @@ export default class ViewPager extends Component {
     if (!this.initialPageSettled) {
       this.initialPageSettled = true;
 
-      if(Platform.OS === 'ios') {
+      if (Platform.OS === 'ios') {
         this.scrollToPage(this.props.initialPage, true);
       } else {
         //A trick to solve bugs on Android. Delay a little
         setTimeout(this.scrollToPage.bind(this, this.props.initialPage, true), 0);
+      }
+    } else if (this.layoutChanged) {
+      this.layoutChanged = false;
+      if (typeof this.currentPage === 'number') {
+        if (Platform.OS === 'ios') {
+          this.scrollToPage(this.currentPage, true);
+        } else {
+          //A trick to solve bugs on Android. Delay a little
+          setTimeout(this.scrollToPage.bind(this, this.currentPage, true), 0);
+        }
+
       }
     }
   }
@@ -237,7 +253,7 @@ export default class ViewPager extends Component {
     this.changePage(page);
 
     const finalX = this.getScrollOffsetOfPage(page);
-    if(immediate) {
+    if (immediate) {
       this.scroller.startScroll(this.scroller.getCurrX(), 0, finalX - this.scroller.getCurrX(), 0, 0);
     } else {
       this.scroller.startScroll(this.scroller.getCurrX(), 0, finalX - this.scroller.getCurrX(), 0, 200);
@@ -246,7 +262,7 @@ export default class ViewPager extends Component {
   }
 
   changePage(page) {
-    if(this.currentPage !== page) {
+    if (this.currentPage !== page) {
       this.currentPage = page;
       this.props.onPageSelected && this.props.onPageSelected(page);
     }
