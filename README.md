@@ -2,19 +2,13 @@
 
 A ListView backed ViewPager component for react-native apps. More flexible than ViewPagerAndroid.
 
-
-
 ## Install
 
-`npm install --save @ldn0x7dc/react-native-view-pager` 
+`npm install --save @ldn0x7dc/react-native-view-pager@latest` 
 
 The private scope `@ldn0x7dc` exists because this name has already been taken.
 
-
-
 ## Documentation
-
-Have a glance at first.
 
 ```
 import ViewPager from '@ldn0x7dc/react-native-view-pager';
@@ -34,52 +28,41 @@ render() {
 
 Most of the props mimics those of ViewPagerAndroid. But differences exist.
 
-* `renderPage` : function
-
-  (pageData, pageId, layout) => renderable
+* `renderPage` : (pageData, pageId, layout) => renderable
 
   For your convenience, The **layout** object ({width, height}) contains the width and height of this ViewPager. The renderable returned here will be overridden with ViewPager's width and height.
 
 
-* `pageDataArray` : array
-
-  Custom data array of your pages. Each array item will be passed to `renderPage(pageData, pageId, layout)` as the first argument.
+* `pageDataArray` : Custom data array of your pages. 
 
 
-* `initialPage` : number
-
-  Index of initial page that should be selected. Use `setPage` method to update the page, and `onPageSelected` to monitor page changes
+* `initialPage` : Index of initial page that should be selected. 
 
 
-* `onPageScroll` : function
 
-  (event) => {}. 
+* `onPageScroll` : (event) => {}. 
 
-  The event object  will carry following data: 
+  The event object carries following data: 
 
   * *position*:  index of first page from the left that is currently visible 
   * *offset*: value from range [0,1) describing stage between page transitions. 
   * *fraction*: means that (1 - x) fraction of the page at "position" index is visible, and x fraction of the next page is visible.
 
-* `onPageScrollStateChanged` : function
+* `onPageScrollStateChanged` : (state) => {}. 
 
-  (state) => {}. 
+  Called when the page scrolling state has changed. The page scrolling state can be in 3 states:  
 
-  Called when the page scrolling state has changed. The page scrolling state can be in 3 states: - 
+  * idle: there is no interaction with the page scroller happening at the time
+  * dragging: there is currently an interaction with the page scroller
+  * settling: there was an interaction with the page scroller, and the page scroller is now finishing it's closing or opening animation 
 
-  * idle, meaning there is no interaction with the page scroller happening at the time
-  * dragging, meaning there is currently an interaction with the page scroller
-  * settling, meaning that there was an interaction with the page scroller, and the page scroller is now finishing it's closing or opening animation 
-
-* `onPageSelected` : function
-
-  (page) => {}.
+* `onPageSelected` : (page) => {}.
 
   Called with the index of page that has been selected.
 
 * `pageMargin` : number
 
-  Blank space to show between pages.
+  blank space to show between pages.
 
 * `scrollEnabled` : bool
 
