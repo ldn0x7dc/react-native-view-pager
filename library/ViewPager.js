@@ -10,15 +10,9 @@ import {createResponder} from 'react-native-gesture-responder';
 import TimerMixin from 'react-timer-mixin';
 import reactMixin from 'react-mixin';
 
-
 const MIN_FLING_VELOCITY = 0.5;
-let DEV = false;
 
 export default class ViewPager extends Component {
-
-  static enableDebug() {
-    DEV = true;
-  }
 
   static propTypes = {
     ...View.propTypes,
@@ -40,11 +34,12 @@ export default class ViewPager extends Component {
     pageDataArray: [],
   };
 
+  pageCount = 0; //Initialize to avoid undefined error
   currentPage = undefined; //Do not initialize to make onPageSelected(0) be dispatched
   layoutChanged = false;
   initialPageSettled = false;
-  layoutChanged = false;
   activeGesture = false;
+  gestureResponder = undefined;
 
   constructor(props) {
     super(props);
@@ -59,7 +54,7 @@ export default class ViewPager extends Component {
     this.scroller = new Scroller(true, (dx, dy, scroller) => {
       if (dx === 0 && dy === 0 && scroller.isFinished()) {
         if (!this.activeGesture) {
-          this.changePageScrollState('idle');
+          this.onPageScrollStateChanged('idle');
         }
       } else {
         const curX = this.scroller.getCurrX();
@@ -84,14 +79,15 @@ export default class ViewPager extends Component {
       onStartShouldSetResponder: (evt, gestureState) => true,
       onResponderGrant: this.onResponderGrant.bind(this),
       onResponderMove: this.onResponderMove.bind(this),
-      onResponderRelease: this.onResponderRelease.bind(this)
+      onResponderRelease: this.onResponderRelease.bind(this),
+      onResponderTerminate: this.onResponderRelease.bind(this)
     });
   }
 
   onResponderGrant(evt, gestureState) {
     this.scroller.forceFinished(true);
     this.activeGesture = true;
-    this.changePageScrollState('dragging');
+    this.onPageScrollStateChanged('dragging');
   }
 
   onResponderMove(evt, gestureState) {
@@ -101,7 +97,6 @@ export default class ViewPager extends Component {
 
   onResponderRelease(evt, gestureState, disableSettle) {
     this.activeGesture = false;
-    this.changePageScrollState('settling');
     if (!disableSettle) {
       this.settlePage(gestureState.vx);
     }
@@ -157,9 +152,8 @@ export default class ViewPager extends Component {
     };
     const element = React.createElement(page.type, newProps);
 
-
     if (this.props.pageMargin > 0 && rowID > 0) {
-      //Do not using margin style to implement pageMargin. The ListView seems calculate a wrong width for children views with margin.
+      //Do not using margin style to implement pageMargin. The ListView seems to calculate a wrong width for children views with margin.
       return (
         <View style={{width: width + this.props.pageMargin, height: height, alignItems: 'flex-end'}}>
           {element}
@@ -186,7 +180,6 @@ export default class ViewPager extends Component {
   componentDidUpdate() {
     if (!this.initialPageSettled) {
       this.initialPageSettled = true;
-
       if (Platform.OS === 'ios') {
         this.scrollToPage(this.props.initialPage, true);
       } else {
@@ -202,7 +195,6 @@ export default class ViewPager extends Component {
           //A trick to solve bugs on Android. Delay a little
           setTimeout(this.scrollToPage.bind(this, this.currentPage, true), 0);
         }
-
       }
     }
   }
@@ -239,8 +231,10 @@ export default class ViewPager extends Component {
   }
 
   flingToPage(page, velocityX) {
+    this.onPageScrollStateChanged('settling');
+
     page = this.validPage(page);
-    this.changePage(page);
+    this.onPageChanged(page);
 
     velocityX *= -1000; //per sec
     const finalX = this.getScrollOffsetOfPage(page);
@@ -249,8 +243,10 @@ export default class ViewPager extends Component {
   }
 
   scrollToPage(page, immediate) {
+    this.onPageScrollStateChanged('settling');
+
     page = this.validPage(page);
-    this.changePage(page);
+    this.onPageChanged(page);
 
     const finalX = this.getScrollOffsetOfPage(page);
     if (immediate) {
@@ -261,14 +257,14 @@ export default class ViewPager extends Component {
 
   }
 
-  changePage(page) {
+  onPageChanged(page) {
     if (this.currentPage !== page) {
       this.currentPage = page;
       this.props.onPageSelected && this.props.onPageSelected(page);
     }
   }
 
-  changePageScrollState(state) {
+  onPageScrollStateChanged(state) {
     this.props.onPageScrollStateChanged && this.props.onPageScrollStateChanged(state);
   }
 
@@ -277,9 +273,7 @@ export default class ViewPager extends Component {
   }
 
   validPage(page) {
-    if (this.pageCount >= 0) {
-      page = Math.min(this.pageCount - 1, page);
-    }
+    page = Math.min(this.pageCount - 1, page);
     page = Math.max(0, page);
     return page;
   }

@@ -6,8 +6,8 @@
     "start": "node_modules/react-native/packager/packager.sh"
   },
   "dependencies": {
-    "react": "^15.1.0",
-    "react-native": "^0.28.0",
-    "@ldn0x7dc/react-native-view-pager": "0.0.x"
+    "@ldn0x7dc/react-native-view-pager": "0.0.8",
+    "react": "15.2.1",
+    "react-native": "^0.29.2"
   }
 }

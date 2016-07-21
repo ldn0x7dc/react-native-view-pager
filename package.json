@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "react-native-gesture-responder": "0.0.8",
+    "react-native-gesture-responder": "0.1.1",
     "react-native-scroller": "0.0.6",
     "react-mixin": "^3.0.5",
     "react-timer-mixin": "^0.13.3"
